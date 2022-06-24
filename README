@@ -1,15 +1,17 @@
 VM-Libvirt-CloneHelper
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+Easily create a bunch of similar VMs from a single base VM
+and IP them via DHCP based off of the MAC address assignmented
+to the VM.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+The basic work flow for this is like below.
+
+   delete
+   clone
+   start
+   wait a bit till they are all started
+   snapshot
+   stop
 
 
 INSTALLATION
