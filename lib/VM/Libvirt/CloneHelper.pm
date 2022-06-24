@@ -8,7 +8,7 @@ use File::Temp;
 
 =head1 NAME
 
-VM::Libvirt::CloneHelper - The great new VM::Libvirt::CloneHelper!
+VM::Libvirt::CloneHelper - Create a bunch of cloned VMs in via libvirt.
 
 =head1 VERSION
 
@@ -37,6 +37,21 @@ our $VERSION = '0.0.1';
         net=>'default',
     });
 
+    $clone_helper->delete_vms;
+    $clone_helper->clone_vms;
+    $clone_helper->start_vms;
+    sleep 500;
+    $clone_helper->snapshot_vms;
+    $clone_helper->shutdown_vms;
+
+It should be noted that this is effectively limited to 253 VMs.
+
+This script lib is primarily meant for creating a bunch of cloned VMs on a
+box for testing purposes, so this is not really a major issue given the
+design scope.
+
+VMs should be set to us DHCP so they will get their expected IP when they boot.
+
 =head1 METHODS
 
 =head2 new
@@ -59,7 +74,9 @@ Initialize the module.
     be sandwhiched between.
 
     windows_blank=>1,
-    Blank commonly used MS domains.
+    Blank commonly used MS domains. This is handy for reducing network noise
+    when testing as well as making sure they any VMs don't do something like
+    run updates when one does not want it to.
 
     mac_base=>'00:08:74:2d:dd:',
     Base to use for the MAC.
@@ -68,7 +85,7 @@ Initialize the module.
     Base to use for the IPs for adding static assignments.
 
     start=>'100',
-    Where to start in 
+    Where to start in set.
 
     to_clone=>'baseVM',
     The name of the VM to clone.
@@ -200,7 +217,7 @@ sub delete_clones {
 	foreach my $name (@VM_names) {
 		print "Undefining " . $name . "\n";
 		my @args = ( 'virsh', 'undefine', '--snapshots-metadata', $name );
-		system(@args) == 0 or die("system '@args' failed... $?");
+		system(@args) == 0 or warn("system '@args' failed... $?");
 
 		my $image = '/var/lib/libvirt/images/' . $name . '.qcow2';
 
@@ -405,6 +422,34 @@ sub vm_list {
 
 	return $VMs;
 }
+
+=head1 BLANKED MS DOMAINS
+
+    microsoft.com
+    windowsupdate.com
+    windows.com
+    microsoft.com.nsatc.net
+    bing.net
+    live.com
+    cloudapp.net
+    cs1.wpc.v0cdn.net
+    -msedge.net
+    msedge.net
+    microsoft.com.akadns.net
+    footprintpredict.com
+    microsoft-hohm.com
+    msn.com
+    social.ms.akadns.net
+    msedge.net
+    dc-msedge.net
+    bing.com
+    edgekey.net
+    azureedge.net
+    amsn.net
+    moiawsorigin.clo.footprintdns.com
+    office365.com
+    skype.com
+    trafficmanager.net
 
 =head1 AUTHOR
 
