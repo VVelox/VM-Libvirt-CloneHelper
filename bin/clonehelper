@@ -3,5 +3,75 @@
 use strict;
 use warnings;
 use Getopt::Long;
-VM::Libvirt::CloneHelper;
+use Config::Tiny;
+use JSON;
+use VM::Libvirt::CloneHelper;
 
+sub version {
+	print "clonehelper v. 0.0.1\n";
+}
+
+sub help {
+	&version;
+
+	print '';
+
+}
+
+my $config_file = '/usr/local/etc/clonehelper/config.ini';
+my $action      = 'list';
+my $help        = 0;
+my $version     = 0;
+GetOptions(
+	'version' => \$version,
+	'v'       => \$version,
+	'help'    => \$help,
+	'h'       => \$help,
+	'f=s'     => \$config_file,
+	'a=s'     => \$action,
+);
+
+# print version or help if requested
+if ($help) {
+	&help;
+	exit 42;
+}
+if ($version) {
+	&version;
+	exit 42;
+}
+
+# die if the config file does not exist
+if ( !-f $config_file ) {
+	die $config_file . ' does not exist';
+}
+
+# read the config
+my $config = Config::Tiny->read( $config_file, 'utf8' )
+	or die( 'unable to read config("' . $config_file . '")... ' . $@ );
+
+my $clone_helper = VM::Libvirt::CloneHelper->new($config);
+
+if ($action eq 'list') {
+	my $json=JSON->new->allow_nonref->pretty(1)->canonical(1);
+	print $json->encode( $clone_helper->vm_list );
+}elsif ($action eq 'start') {
+	$clone_helper->start_clones;
+}elsif ($action eq 'stop') {
+	$clone_helper->stop_clones;
+}elsif ($action eq 'delete') {
+	$clone_helper->delete_clones;
+}elsif ($action eq 'snapshot') {
+	$clone_helper->snapshot_clones;
+}elsif ($action eq 'net_xml') {
+	my $xml=$clone_helper->net_xml;
+	print $xml;
+}elsif ($action eq 'net_redefine') {
+	$clone_helper->net_redefine;
+}elsif ($action eq 'clone') {
+	$clone_helper->clone;
+} else {
+	die $action.' is not a understood action';
+}
+
+exit 0;
