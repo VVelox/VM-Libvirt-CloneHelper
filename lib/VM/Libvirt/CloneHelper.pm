@@ -187,7 +187,7 @@ sub clone {
 	foreach my $name (@VM_names) {
 		print "Cloning '".$self->{to_clone}."' to '" . $name . "'(".$VMs->{$name}{mac}.", ".$VMs->{$name}{ip}.")...\n";
 
-		my @args = ( 'virt-clone', '-m', $VMs->{$name}{mac}, '-o', $self->{to_clone},'-n', $name );
+		my @args = ( 'virt-clone', '-m', $VMs->{$name}{mac}, '-o', $self->{to_clone},'--auto-clone','-n', $name );
 		system(@args) == 0 or die("system '@args' failed... $?");
 	}
 }
