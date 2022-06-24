@@ -176,7 +176,7 @@ if ( !-f $config_file ) {
 my $config = Config::Tiny->read( $config_file, 'utf8' )
 	or die( 'unable to read config("' . $config_file . '")... ' . $@ );
 
-my $clone_helper = VM::Libvirt::CloneHelper->new($config);
+my $clone_helper = VM::Libvirt::CloneHelper->new($config->{_});
 
 if ( $action eq 'list' ) {
 	my $json = JSON->new->allow_nonref->pretty(1)->canonical(1);
