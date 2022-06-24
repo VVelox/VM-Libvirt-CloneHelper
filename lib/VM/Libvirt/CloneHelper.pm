@@ -391,7 +391,7 @@ sub stop_clones {
 	foreach my $name (@VM_names) {
 		print "Stopping " . $name . "...\n";
 		my @args = ( 'virsh', 'destroy', $name );
-		system(@args) == 0 or die("system '@args' failed... $?");
+		system(@args) == 0 or warn("system '@args' failed... $?");
 	}
 }
 
