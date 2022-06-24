@@ -375,7 +375,8 @@ sub start_clones {
 
 =head2 stop_clones
 
-Stop all the clones
+Stop all the clones. This does not stop them gracefully as we don't
+need to as they are being started via snapshot.
 
     $clone_helper->stop_clones;
 
@@ -389,7 +390,7 @@ sub stop_clones {
 	my @VM_names = sort( keys( %{$VMs} ) );
 	foreach my $name (@VM_names) {
 		print "Stopping " . $name . "...\n";
-		my @args = ( 'virsh', 'shutdown', $name );
+		my @args = ( 'virsh', 'destroy', $name );
 		system(@args) == 0 or die("system '@args' failed... $?");
 	}
 }
