@@ -145,6 +145,7 @@ net_xml        Generate the XML config and print it.
 net_redefine   Remove and re-add the network using the generated config.
 snapshot       Snapshot all the VM clones.
 recreate       Recreate a VM specified via -n.
+recreate_all   Recreate all VMs.
 ';
 
 }
@@ -213,6 +214,9 @@ elsif ( $action eq 'clone' ) {
 }
 elsif ( $action eq 'recreate' ) {
 	$clone_helper->recreate($name);
+}
+elsif ( $action eq 'recreate_all' ) {
+	$clone_helper->recreate_all;
 }
 else {
 	die $action . ' is not a understood action';
