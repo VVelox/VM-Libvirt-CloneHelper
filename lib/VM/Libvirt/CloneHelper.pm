@@ -28,13 +28,14 @@ our $VERSION = '0.0.1';
         windows_blank=>0,
         mac_base=>'00:08:74:2d:dd:',
         ipv4_base=>'192.168.1.',
-        start=>'100',
+        start=>100,
         to_clone=>'baseVM',
         clone_name_base=>'foo',
         count=>10,
         verbose=>1,
         snapshot_name=>'clean',
         net=>'default',
+        wait=>360,
     });
 
     $clone_helper->delete_vms;
@@ -101,6 +102,9 @@ Initialize the module.
     snapshot_name=>'clean',
     The name to use for the snapshot.
 
+    wait=>360,
+    How long to wait if auto-doing all.
+
 =cut
 
 sub new {
@@ -116,7 +120,7 @@ sub new {
 		windows_blank   => 1,
 		mac_base        => '00:08:74:2d:dd:',
 		ipv4_base       => '192.168.1.',
-		start           => '100',
+		start           => 100,
 		to_clone        => 'baseVM',
 		delete_old      => 1,
 		clone_name_base => 'foo',
@@ -125,6 +129,7 @@ sub new {
 		verbose         => 1,
 		snapshot_name   => 'clean',
 		net             => 'default',
+		wait            => 360,
 	};
 	bless $self;
 
@@ -167,6 +172,10 @@ sub new {
 		$self->{$key} = $args{$key};
 	}
 
+	$self->{end} = $self->{start} + $self->{count} - 1;
+
+	$self->{VMs} = $self->vm_list;
+
 	return $self;
 }
 
@@ -180,14 +189,30 @@ Create the clones.
 
 sub clone {
 	my $self = $_[0];
+	my $name = $_[1];
 
 	my $VMs = $self->vm_list;
 
-	my @VM_names = sort( keys( %{$VMs} ) );
+	my @VM_names;
+	if ( defined($name) ) {
+		if ( !defined( $VMs->{$name} ) ) {
+			die( '"' . $VMs . '" is not a known VM' );
+		}
+		push( @VM_names, $name );
+	}
+	else {
+		@VM_names = sort( keys( %{$VMs} ) );
+	}
 	foreach my $name (@VM_names) {
-		print "Cloning '".$self->{to_clone}."' to '" . $name . "'(".$VMs->{$name}{mac}.", ".$VMs->{$name}{ip}.")...\n";
+		print "Cloning '"
+			. $self->{to_clone}
+			. "' to '"
+			. $name . "'("
+			. $VMs->{$name}{mac} . ", "
+			. $VMs->{$name}{ip}
+			. ")...\n";
 
-		my @args = ( 'virt-clone', '-m', $VMs->{$name}{mac}, '-o', $self->{to_clone},'--auto-clone','-n', $name );
+		my @args = ( 'virt-clone', '-m', $VMs->{$name}{mac}, '-o', $self->{to_clone}, '--auto-clone', '-n', $name );
 		system(@args) == 0 or die("system '@args' failed... $?");
 	}
 }
@@ -331,6 +356,39 @@ sub net_redefine {
 	return;
 }
 
+=head2 recreate
+
+Recreate the specified VM. One argument is required and that is the name
+of the VM to recreate.
+
+    $clone_helper->recreate('foo100');
+
+=cut
+
+sub recreate {
+	my $self = $_[0];
+	my $name = $_[0];
+
+	if ( !defined($name) ) {
+		die('No VM specified to recreate');
+	}
+
+	my $VMs = $self->vm_list;
+
+	if ( !defined( $VMs->{$name} ) ) {
+		die( '"' . $VMs . '" is not a known VM' );
+	}
+
+	$self->delete_clones($name);
+	$self->clone($name);
+	$self->start_clones($name);
+	sleep(360);
+	$self->snapshot_clones($name);
+	$self->stop_clones($name);
+
+	return;
+}
+
 =head2 snapshot_clones
 
 Snapshot all the clones
@@ -341,10 +399,20 @@ Snapshot all the clones
 
 sub snapshot_clones {
 	my $self = $_[0];
+	my $name = $_[1];
 
 	my $VMs = $self->vm_list;
 
-	my @VM_names = sort( keys( %{$VMs} ) );
+	my @VM_names;
+	if ( defined($name) ) {
+		if ( !defined( $VMs->{$name} ) ) {
+			die( '"' . $VMs . '" is not a known VM' );
+		}
+		push( @VM_names, $name );
+	}
+	else {
+		@VM_names = sort( keys( %{$VMs} ) );
+	}
 	foreach my $name (@VM_names) {
 		print "Snapshotting " . $name . "...\n";
 		my @args = ( 'virsh', 'snapshot-create-as', '--name', $self->{snapshot_name}, $name );
@@ -362,10 +430,20 @@ Start all the clones
 
 sub start_clones {
 	my $self = $_[0];
+	my $name = $_[1];
 
 	my $VMs = $self->vm_list;
 
-	my @VM_names = sort( keys( %{$VMs} ) );
+	my @VM_names;
+	if ( defined($name) ) {
+		if ( !defined( $VMs->{$name} ) ) {
+			die( '"' . $VMs . '" is not a known VM' );
+		}
+		push( @VM_names, $name );
+	}
+	else {
+		@VM_names = sort( keys( %{$VMs} ) );
+	}
 	foreach my $name (@VM_names) {
 		print "Starting " . $name . "...\n";
 		my @args = ( 'virsh', 'start', $name );
@@ -384,10 +462,20 @@ need to as they are being started via snapshot.
 
 sub stop_clones {
 	my $self = $_[0];
+	my $name = $_[1];
 
 	my $VMs = $self->vm_list;
 
-	my @VM_names = sort( keys( %{$VMs} ) );
+	my @VM_names;
+	if ( defined($name) ) {
+		if ( !defined( $VMs->{$name} ) ) {
+			die( '"' . $VMs . '" is not a known VM' );
+		}
+		push( @VM_names, $name );
+	}
+	else {
+		@VM_names = sort( keys( %{$VMs} ) );
+	}
 	foreach my $name (@VM_names) {
 		print "Stopping " . $name . "...\n";
 		my @args = ( 'virsh', 'destroy', $name );
@@ -403,6 +491,11 @@ Generate a list of VMs.
 
 sub vm_list {
 	my $self = $_[0];
+
+	# only need to create this all once
+	if ( defined( $self->{VMs} ) ) {
+		return $self->{VMs};
+	}
 
 	my $VMs = {};
 

@@ -102,6 +102,9 @@ The variable/value defaults are shown below.
     snapshot_name=clean
     # The name to use for the snapshot.
 
+    wait=360
+    # How long to wait if auto-doing all.
+
 temp
 
 =cut
@@ -124,6 +127,7 @@ sub help {
 
 -f <file>        Config file.
 -a <action>      Action to perform.
+-n <name>        Name of a VM.
 
 -h               Print help.
 --help           Print help.
@@ -140,6 +144,7 @@ delete         Delete all the VM clones.
 net_xml        Generate the XML config and print it.
 net_redefine   Remove and re-add the network using the generated config.
 snapshot       Snapshot all the VM clones.
+recreate       Recreate a VM specified via -n.
 ';
 
 }
@@ -148,6 +153,7 @@ my $config_file = '/usr/local/etc/clonehelper/config.ini';
 my $action      = 'list';
 my $help        = 0;
 my $version     = 0;
+my $name        = undef;
 GetOptions(
 	'version' => \$version,
 	'v'       => \$version,
@@ -155,6 +161,7 @@ GetOptions(
 	'h'       => \$help,
 	'f=s'     => \$config_file,
 	'a=s'     => \$action,
+	'n=s'     => \$name,
 );
 
 # print version or help if requested
@@ -176,23 +183,23 @@ if ( !-f $config_file ) {
 my $config = Config::Tiny->read( $config_file, 'utf8' )
 	or die( 'unable to read config("' . $config_file . '")... ' . $@ );
 
-my $clone_helper = VM::Libvirt::CloneHelper->new($config->{_});
+my $clone_helper = VM::Libvirt::CloneHelper->new( $config->{_} );
 
 if ( $action eq 'list' ) {
 	my $json = JSON->new->allow_nonref->pretty(1)->canonical(1);
 	print $json->encode( $clone_helper->vm_list );
 }
 elsif ( $action eq 'start' ) {
-	$clone_helper->start_clones;
+	$clone_helper->start_clones($name);
 }
 elsif ( $action eq 'stop' ) {
-	$clone_helper->stop_clones;
+	$clone_helper->stop_clones($name);
 }
 elsif ( $action eq 'delete' ) {
-	$clone_helper->delete_clones;
+	$clone_helper->delete_clones($name);
 }
 elsif ( $action eq 'snapshot' ) {
-	$clone_helper->snapshot_clones;
+	$clone_helper->snapshot_clones($name);
 }
 elsif ( $action eq 'net_xml' ) {
 	my $xml = $clone_helper->net_xml;
@@ -202,7 +209,10 @@ elsif ( $action eq 'net_redefine' ) {
 	$clone_helper->net_redefine;
 }
 elsif ( $action eq 'clone' ) {
-	$clone_helper->clone;
+	$clone_helper->clone($name);
+}
+elsif ( $action eq 'recreate' ) {
+	$clone_helper->recreate($name);
 }
 else {
 	die $action . ' is not a understood action';
