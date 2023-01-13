@@ -227,6 +227,7 @@ Delete all the clones
 
 sub delete_clones {
 	my $self = $_[0];
+	my $name = $_[1];
 
 	# virsh undefine --snapshots-metadata
 	# the VM under /var/lib/libvirt/images needs to be removed manually given
@@ -238,7 +239,16 @@ sub delete_clones {
 
 	my $VMs = $self->vm_list;
 
-	my @VM_names = sort( keys( %{$VMs} ) );
+	my @VM_names;
+	if ( defined($name) ) {
+		if ( !defined( $VMs->{$name} ) ) {
+			die( '"' . $VMs . '" is not a known VM' );
+		}
+		push( @VM_names, $name );
+	}
+	else {
+		@VM_names = sort( keys( %{$VMs} ) );
+	}
 	foreach my $name (@VM_names) {
 		print "Undefining " . $name . "\n";
 		my @args = ( 'virsh', 'undefine', '--snapshots-metadata', $name );
