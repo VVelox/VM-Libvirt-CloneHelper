@@ -392,9 +392,35 @@ sub recreate {
 	$self->delete_clones($name);
 	$self->clone($name);
 	$self->start_clones($name);
-	sleep(360);
+	sleep($self->{wait});
 	$self->snapshot_clones($name);
 	$self->stop_clones($name);
+
+	return;
+}
+
+=head2 recreate_all
+
+Recreate all VMs.
+
+    $clone_helper->recreate_all;
+
+=cut
+
+sub recreate_all {
+	my $self = $_[0];
+
+	my $VMs = $self->vm_list;
+
+	my @VM_names = sort( keys( %{$VMs} ) );
+	foreach my $name (@VM_names) {
+		$self->delete_clones($name);
+		$self->clone($name);
+		$self->start_clones($name);
+		sleep($self->{wait});
+		$self->snapshot_clones($name);
+		$self->stop_clones($name);
+	}
 
 	return;
 }
