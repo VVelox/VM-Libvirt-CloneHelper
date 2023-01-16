@@ -6,7 +6,7 @@ clonehelper - Create a bunch of cloned VMs in via libvirt.
 
 =head1 SYNOPSIS
 
-clonehelper [B<-f> <config>] B<-b> <action>
+clonehelper [B<-f> <config>] [B<-n> <name>] B<-a> <action>
 
 =head1 DESCRIPTION
 
@@ -18,6 +18,26 @@ The basic work flow for this is like below.
    wait a bit till they are all started
    snapshot
    shutdown
+
+This can automatically be done via using the
+action recreate. If you wish to do it for all, you likely
+want to use recreate_all.
+
+A single VM may be acted upon via using the -n switch.
+
+=head1 SWITCHES
+
+=head2 -a <action>
+
+The action to perform.
+
+=head2 -f <config>
+
+The config to use.
+
+=head2 -n <name>
+
+Act specifically on this VM instead of them all.
 
 =head1 ACTIONS
 
@@ -48,6 +68,14 @@ Generate the XML config and print it.
 =head2 net_redefine
 
 Remove and re-add the network using the generated config.
+
+=head2 recreate
+
+Recreate the VMs.
+
+=head2 recreate_all
+
+Recreate the VMs, doing them one at a time.
 
 =head2 snapshot
 
@@ -117,7 +145,7 @@ use JSON;
 use VM::Libvirt::CloneHelper;
 
 sub version {
-	print "clonehelper v. 0.0.1\n";
+	print "clonehelper v. 0.1.0\n";
 }
 
 sub help {
@@ -135,7 +163,7 @@ sub help {
 --version        Print version.
 
 
-Actions...
+"Actions...
 list           Print a JSON dump of VMs, maps, and IPs.
 start          Start all the VM clones.
 stop           Stop all the VM clones.

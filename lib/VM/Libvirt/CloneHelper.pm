@@ -12,11 +12,11 @@ VM::Libvirt::CloneHelper - Create a bunch of cloned VMs in via libvirt.
 
 =head1 VERSION
 
-Version 0.0.1
+Version 0.1.0
 
 =cut
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.1.0';
 
 =head1 SYNOPSIS
 
@@ -183,6 +183,9 @@ sub new {
 
 Create the clones.
 
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
+
     $clone_helper->clone;
 
 =cut
@@ -220,6 +223,9 @@ sub clone {
 =head2 delete_clones
 
 Delete all the clones
+
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
 
     $clone_helper->delete_clones;
 
@@ -368,8 +374,13 @@ sub net_redefine {
 
 =head2 recreate
 
-Recreate the specified VM. One argument is required and that is the name
-of the VM to recreate.
+Recreate the specified VM.
+
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
+
+If you wish to recreate all, you should likely use recreate_all, to avoid
+any issues caused by starting them all at the same time.
 
     $clone_helper->recreate('foo100');
 
@@ -403,6 +414,8 @@ sub recreate {
 
 Recreate all VMs.
 
+Does one at a time.
+
     $clone_helper->recreate_all;
 
 =cut
@@ -428,6 +441,9 @@ sub recreate_all {
 =head2 snapshot_clones
 
 Snapshot all the clones
+
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
 
     $clone_helper->snapshot_clones;
 
@@ -460,6 +476,9 @@ sub snapshot_clones {
 
 Start all the clones
 
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
+
     $clone_helper->start_clones;
 
 =cut
@@ -491,6 +510,9 @@ sub start_clones {
 
 Stop all the clones. This does not stop them gracefully as we don't
 need to as they are being started via snapshot.
+
+One optional argument is taken and that is the VM to operate on.
+Otherwise all is ran for them all.
 
     $clone_helper->stop_clones;
 
